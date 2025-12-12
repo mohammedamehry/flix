@@ -218,7 +218,7 @@ function renderEpisodes(episodes, seasonNum) {
 
     episodesList.innerHTML = episodes.map(ep => {
         // Use placeholder.png if no still_path
-        const thumbUrl = ep.still_path ? `${IMG_BASE_URL}${ep.still_path}` : 'placeholder.png';
+        const thumbUrl = ep.still_path ? `${IMG_BASE_URL}${ep.still_path}` : 'images/placeholder.png';
 
         return `
         <div class="episode-item" onclick="window.location.href='watch.html?id=${SERIES_ID}&type=tv&season=${seasonNum}&episode=${ep.episode_number}'" style="cursor: pointer;">

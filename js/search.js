@@ -213,7 +213,7 @@ function renderGrid(movies, titleText, reset = false) {
     }
 
     const html = movies.map(movie => {
-        const poster = movie.poster_path ? `${IMG_BASE_URL}${movie.poster_path}` : 'placeholder.png';
+        const poster = movie.poster_path ? `${IMG_BASE_URL}${movie.poster_path}` : 'images/placeholder.png';
         const title = movie.title || movie.name;
 
         // Determine type
