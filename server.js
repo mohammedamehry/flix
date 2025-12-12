@@ -188,6 +188,53 @@ app.get('/api/streams', async (req, res) => {
     }
 });
 
+// New Endpoint: Serve Master Playlist directly (Required for iOS)
+app.get('/api/master.m3u8', async (req, res) => {
+    const { tmdbId, imdbId, title, year, type, season, episode } = req.query;
+
+    if (!tmdbId || !title) {
+        return res.status(400).send('#EXTM3U\n#EXT-X-ERROR: Missing parameters');
+    }
+
+    try {
+        console.log(`[Master] Generating playlist for: ${title}`);
+        const data = await getSources({ tmdbId, imdbId, type, year, title, season, episode });
+
+        if (data.error || !data.streams) {
+            return res.status(500).send('#EXTM3U\n#EXT-X-ERROR: No streams found');
+        }
+
+        // Generate Master Playlist content
+        let masterPlaylist = "#EXTM3U\n#EXT-X-VERSION:3\n";
+
+        // Sort by quality
+        data.streams.sort((a, b) => b.quality - a.quality);
+
+        data.streams.forEach(stream => {
+            // Construct Proxy URL
+            const proxyUrl = `${req.protocol}://${req.get('host')}/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}&type=m3u8`;
+
+            // Bandwidth estimation
+            const bandwidthMap = {
+                360: 800000, 480: 1400000, 720: 2800000, 1080: 5000000, 4096: 10000000
+            };
+            const bandwidth = bandwidthMap[stream.quality] || 3000000;
+
+            masterPlaylist += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${Math.round(16 / 9 * stream.quality)}x${stream.quality},NAME="${stream.quality}p"\n`;
+            masterPlaylist += `${proxyUrl}\n`;
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        res.setHeader('Content-Disposition', 'inline; filename="master.m3u8"');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.send(masterPlaylist);
+
+    } catch (error) {
+        console.error(`[Master] Error:`, error.message);
+        res.status(500).send('#EXTM3U\n#EXT-X-ERROR: Server Error');
+    }
+});
+
 async function getSources(movieInfo) {
     const PROVIDER = 'AVideasy';
     const DOMAIN = "https://api.videasy.net";

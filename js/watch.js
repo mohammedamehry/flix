@@ -168,63 +168,38 @@ async function initWatch() {
 
             console.log("Fetching streams from:", apiUrl);
 
-            // 3. Fetch Sources
-            const res = await fetch(apiUrl);
-            const data = await res.json();
+            // 3. Construct Master Playlist URL (Server-side)
+            const masterUrl = `${CONFIG.BACKEND_URL}/api/master.m3u8?tmdbId=${details.id}&imdbId=${details.imdb_id || ''}&title=${encodeURIComponent(details.title || details.name)}&year=${year}&type=${type}${isTv ? `&season=${urlParams.get('season') || 1}&episode=${urlParams.get('episode') || 1}` : ''}`;
 
-            if (data.error) throw new Error(data.error);
-            if (!data.streams || data.streams.length === 0) throw new Error("No streams found");
+            console.log("Using Master URL:", masterUrl);
 
-            console.log("Streams found:", data.streams.length);
+            // Fetch subtitles separately for the player config (optional, but good for UI)
+            // Note: We can fire this asynchronously without blocking playback, or fetch api/streams just for tracks if needed.
+            // For now, let's keep it simple and just load the video. 
+            // If we need tracks, we might need to fetch api/streams PARALLEL to setting the source, 
+            // but to minimize delay, let's just set the source.
+            // *To keep existing subtitle functionality, we still need to fetch /api/streams to get tracks list.*
 
-            // Sort streams by quality (highest first)
-            data.streams.sort((a, b) => (b.quality || 0) - (a.quality || 0));
-
-            // Generate a Master Playlist (.m3u8) on the fly
-            let masterPlaylist = "#EXTM3U\n#EXT-X-VERSION:3\n";
-
-            data.streams.forEach(stream => {
-                let fileUrl = stream.file;
-                if (fileUrl.startsWith('/')) {
-                    fileUrl = CONFIG.BACKEND_URL + fileUrl;
+            let tracks = [];
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+                if (data.tracks) {
+                    data.tracks.forEach((t) => {
+                        let trackUrl = t.file;
+                        if (trackUrl.startsWith('/')) trackUrl = CONFIG.BACKEND_URL + trackUrl;
+                        tracks.push({
+                            file: trackUrl,
+                            kind: 'captions',
+                            label: t.label || 'English'
+                        });
+                    });
                 }
+            } catch (e) { console.warn("Could not load subtitles", e); }
 
-                // Estimate bandwidth if not provided (generic values)
-                const bandwidthMap = {
-                    360: 800000,
-                    480: 1400000,
-                    720: 2800000,
-                    1080: 5000000,
-                    4096: 10000000
-                };
-                const bandwidth = bandwidthMap[stream.quality] || 3000000;
-
-                masterPlaylist += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${Math.round(16 / 9 * stream.quality)}x${stream.quality},NAME="${stream.quality}p"\n`;
-                masterPlaylist += `${fileUrl}\n`;
-            });
-
-            console.log("Generated Master Playlist:\n", masterPlaylist);
-
-            // Create a Blob URL for the master playlist
-            const blob = new Blob([masterPlaylist], { type: 'application/vnd.apple.mpegurl' });
-            const masterUrl = URL.createObjectURL(blob);
 
             // --- INIT OVENPLAYER ---
             console.log("Initializing OvenPlayer...");
-
-            // Prepare tracks for OvenPlayer
-            const tracks = [];
-            if (data.tracks && data.tracks.length > 0) {
-                data.tracks.forEach((t) => {
-                    let trackUrl = t.file;
-                    if (trackUrl.startsWith('/')) trackUrl = CONFIG.BACKEND_URL + trackUrl;
-                    tracks.push({
-                        file: trackUrl,
-                        kind: 'captions',
-                        label: t.label || 'English'
-                    });
-                });
-            }
 
             // Initialize OvenPlayer with single Master Source
             const player = OvenPlayer.create('player', {
