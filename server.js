@@ -253,6 +253,19 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Serve other pages
+app.get('/movies.html', (req, res) => res.sendFile(path.join(__dirname, 'movies.html')));
+app.get('/series.html', (req, res) => res.sendFile(path.join(__dirname, 'series.html')));
+app.get('/search.html', (req, res) => res.sendFile(path.join(__dirname, 'search.html')));
+app.get('/movieinfo.html', (req, res) => res.sendFile(path.join(__dirname, 'movieinfo.html')));
+app.get('/serieinfo.html', (req, res) => res.sendFile(path.join(__dirname, 'serieinfo.html')));
+app.get('/404.html', (req, res) => res.sendFile(path.join(__dirname, '404.html')));
+
+// Fallback for 404
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

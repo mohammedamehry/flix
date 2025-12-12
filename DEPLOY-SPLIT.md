@@ -110,3 +110,30 @@ GitHub Pages forces HTTPS. Your raw EC2 IP is HTTP. Chrome blocks `fetch('http:/
     sudo certbot --nginx -d api.myflix.com
     ```
 4.  Configure Nginx to forward requests to localhost:3000.
+
+---
+
+## Troubleshooting: Issues Connecting to EC2
+
+If you cannot connect to your EC2 instance (e.g., SSH fails, or the website can't reach the API), check these common issues:
+
+### 1. Check Security Groups (Inbound Rules)
+Your EC2 instance acts like a server behind a firewall. You **MUST** explicitly allow traffic.
+1.  Go to AWS Console -> EC2 -> Instances.
+2.  Select your instance -> Click **Security** tab.
+3.  Click the Security Group ID (sg-xxxx).
+4.  Click **Edit inbound rules**.
+5.  Add Rule 1: Type **SSH**, Port **22**, Source **My IP** (or Anywhere 0.0.0.0/0).
+6.  Add Rule 2: Type **Custom TCP**, Port **3000**, Source **Anywhere-IPv4** (0.0.0.0/0).
+7.  Save rules.
+
+### 2. Check Public IP
+Ensure your instance actually has a public IP address.
+-   In the EC2 Dashboard, check "Public IPv4 address".
+-   If it's empty, you launched the instance without one. You must **Launch a New Instance** and enable "Auto-assign Public IP" in the settings, or allocate an **Elastic IP** and associate it with your instance.
+
+### 3. Check Outbound Connectivity
+If your server cannot install packages (`sudo apt update` fails):
+1.  Check the **Outbound rules** of your Security Group. It should default to "All traffic" -> "0.0.0.0/0".
+2.  Check if you are in a **Private Subnet**. If you created a custom VPC, ensure the subnet has a route to an **Internet Gateway**. (If you used the "Default VPC", this is usually configured correctly).
+
