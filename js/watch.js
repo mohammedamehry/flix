@@ -1,6 +1,35 @@
 const urlParams = new URLSearchParams(window.location.search);
 const MOVIE_ID = urlParams.get('id');
 
+// --- Mobile Debugger ---
+if (urlParams.get('debug') === 'true') {
+    const debugOverlay = document.createElement('div');
+    debugOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:50%;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:10px;overflow-y:scroll;z-index:9999;pointer-events:none;padding:10px;white-space:pre-wrap;';
+    document.body.appendChild(debugOverlay);
+
+    const oldLog = console.log;
+    const oldError = console.error;
+    const oldWarn = console.warn;
+
+    function logToScreen(type, args) {
+        const line = document.createElement('div');
+        line.textContent = `[${type}] ` + Array.from(args).map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ');
+        if (type === 'ERROR') line.style.color = '#ff5555';
+        if (type === 'WARN') line.style.color = '#ffff55';
+        debugOverlay.appendChild(line);
+        debugOverlay.scrollTop = debugOverlay.scrollHeight;
+    }
+
+    console.log = function (...args) { oldLog.apply(console, args); logToScreen('LOG', args); };
+    console.error = function (...args) { oldError.apply(console, args); logToScreen('ERROR', args); };
+    console.warn = function (...args) { oldWarn.apply(console, args); logToScreen('WARN', args); };
+
+    // Capture Global Errors
+    window.onerror = function (msg, url, line) {
+        console.error(`Global Error: ${msg} (${url}:${line})`);
+    };
+}
+
 // --- Loading Screen Logic ---
 function getLoadingScreen() {
     return document.getElementById('loading-screen');
