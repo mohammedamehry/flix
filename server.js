@@ -53,6 +53,9 @@ app.get('/proxy', async (req, res) => {
         const isM3U8 = contentType.includes('mpegurl') || targetUrl.includes('.m3u8');
         const isSegment = targetUrl.includes('/seg-') || /\.(ts|m4s|mp4|jpg|png|html|js|css|txt|webp)$/i.test(targetUrl);
 
+        // Forward status code (Important for 206 Partial Content / Seeking)
+        res.status(response.status);
+
         // Handle M3U8 manifest - rewrite URLs
         if (isM3U8) {
             const text = await response.text();
