@@ -1,0 +1,265 @@
+const express = require('express');
+const fetch = require('node-fetch');
+const path = require('path');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Enable CORS for all routes
+app.use(cors());
+
+// Serve static files (CSS, JS, images)
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Proxy endpoint for HLS streams
+app.get('/proxy', async (req, res) => {
+    const { url, referer, origin } = req.query;
+
+    if (!url) {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    const targetUrl = decodeURIComponent(url);
+    const customReferer = referer ? decodeURIComponent(referer) : 'https://api.videasy.net/';
+    const customOrigin = origin ? decodeURIComponent(origin) : 'https://api.videasy.net';
+
+    console.log(`[Proxy] Fetching: ${targetUrl.substring(0, 80)}...`);
+
+    try {
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': customReferer,
+            'Origin': customOrigin,
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+        };
+
+        // Forward range header if present (for seeking)
+        if (req.headers.range) {
+            headers['Range'] = req.headers.range;
+        }
+
+        const response = await fetch(targetUrl, { headers });
+
+        if (!response.ok) {
+            console.error(`[Proxy] Error: ${response.status} ${response.statusText}`);
+            return res.status(response.status).send(`Upstream error: ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        const isM3U8 = contentType.includes('mpegurl') || targetUrl.includes('.m3u8');
+        const isSegment = targetUrl.includes('/seg-') || /\.(ts|m4s|mp4|jpg|png|html|js|css|txt|webp)$/i.test(targetUrl);
+
+        // Handle M3U8 manifest - rewrite URLs
+        if (isM3U8) {
+            const text = await response.text();
+            console.log(`[Proxy] M3U8 manifest: ${text.length} bytes`);
+
+            const baseUrl = new URL(targetUrl);
+            const lines = text.split('\n');
+            const rewrittenLines = lines.map(line => {
+                const trimmed = line.trim();
+                if (trimmed && !trimmed.startsWith('#')) {
+                    try {
+                        // Resolve relative URLs
+                        const absoluteUrl = new URL(trimmed, targetUrl).toString();
+                        // Rewrite to go through our proxy
+                        return `/proxy?url=${encodeURIComponent(absoluteUrl)}&referer=${encodeURIComponent(customReferer)}&origin=${encodeURIComponent(customOrigin)}`;
+                    } catch (e) {
+                        return line;
+                    }
+                }
+                return line;
+            });
+
+            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.send(rewrittenLines.join('\n'));
+
+            // Handle video segments - fix content-type
+        } else if (isSegment) {
+            // Anti-bot obfuscation fix: segments are disguised as images/html/js
+            const fixedContentType = 'video/mp2t'; // MPEG-TS
+            console.log(`[Proxy] Video segment: ${fixedContentType}`);
+
+            res.setHeader('Content-Type', fixedContentType);
+            res.setHeader('Access-Control-Allow-Origin', '*');
+
+            // Forward other important headers
+            if (response.headers.get('content-range')) {
+                res.setHeader('Content-Range', response.headers.get('content-range'));
+            }
+            if (response.headers.get('accept-ranges')) {
+                res.setHeader('Accept-Ranges', response.headers.get('accept-ranges'));
+            }
+
+            // Stream the response
+            response.body.pipe(res);
+
+            // Handle other content (subtitles, etc)
+        } else {
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            response.body.pipe(res);
+        }
+
+    } catch (error) {
+        console.error(`[Proxy] Error:`, error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get streams endpoint (calls local getSources)
+app.get('/api/streams', async (req, res) => {
+    const { tmdbId, imdbId, title, year, type, season, episode } = req.query;
+
+    if (!tmdbId || !title) {
+        return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    try {
+        console.log(`[API] Fetching streams for: ${title}`);
+
+        const data = await getSources({ tmdbId, imdbId, type, year, title, season, episode });
+
+        if (data.error) {
+            return res.status(500).json(data);
+        }
+
+        // Rewrite stream URLs to go through our proxy
+        if (data.streams) {
+            data.streams = data.streams.map(stream => ({
+                ...stream,
+                file: `/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}`
+            }));
+        }
+
+        // Rewrite subtitle track URLs to go through our proxy
+        if (data.tracks) {
+            data.tracks = data.tracks.map(track => ({
+                ...track,
+                file: `/proxy?url=${encodeURIComponent(track.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}`
+            }));
+        }
+
+        res.json(data);
+
+    } catch (error) {
+        console.error(`[API] Error:`, error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+async function getSources(movieInfo) {
+    const PROVIDER = 'AVideasy';
+    const DOMAIN = "https://api.videasy.net";
+    const headers = {
+        'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        'referer': `${DOMAIN}/`,
+        "origin": `${DOMAIN}`
+    };
+
+    const sources = ["myflixerzupcloud"];
+
+    // Logic adapted from decryptvds.js
+    for (const source of sources) {
+        try {
+            let url = `https://api.videasy.net/myflixerzupcloud/sources-with-title?mediaType=${movieInfo.type}&year=${movieInfo.year}&tmdbId=${movieInfo.tmdbId}&imdbId=${movieInfo.imdbId}&title=${encodeURIComponent(movieInfo.title)}`;
+
+            if (movieInfo.type === "tv") {
+                url += `&episodeId=${movieInfo.episode}&seasonId=${movieInfo.season}`;
+            }
+
+            const response = await fetch(url, { headers });
+            const textDetail = await response.text();
+
+            if (!textDetail) continue;
+
+            // Decrypt Logic
+            const urlDecrypt = "https://enc-dec.app/api/dec-videasy";
+            const body = {
+                text: textDetail,
+                id: movieInfo.tmdbId
+            };
+
+            const decResponse = await fetch(urlDecrypt, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const decryptData = await decResponse.json();
+
+            if (!decryptData || !decryptData.result || !decryptData.result.sources) continue;
+
+            // Process Sources
+            let directQuality = [];
+            const tracks = [];
+
+            if (decryptData.result.sources) {
+                for (const item of decryptData.result.sources) {
+                    let quality = item.quality;
+                    const match = quality && quality.match(/([0-9]+)/i);
+                    quality = match ? Number(match[1]) : 1080;
+
+                    directQuality.push({
+                        file: item.url,
+                        quality: quality,
+                        type: 'hls' // Assuming HLS based on context
+                    });
+                }
+            }
+
+            if (decryptData.result.subtitles) {
+                for (const sub of decryptData.result.subtitles) {
+                    tracks.push({
+                        file: sub.url,
+                        kind: 'captions',
+                        label: sub.language
+                    });
+                }
+            }
+
+            if (directQuality.length === 0) continue;
+
+            // Sort by quality desc
+            directQuality.sort((a, b) => b.quality - a.quality);
+
+            return {
+                source: PROVIDER,
+                streams: directQuality,
+                tracks: tracks,
+                headers: headers // Return the headers needed for playback
+            };
+
+        } catch (e) {
+            console.error(`Error processing source ${source}:`, e);
+            continue;
+        }
+    }
+
+    throw new Error("No streams found");
+}
+
+// Serve watch page
+app.get('/watch', (req, res) => {
+    res.sendFile(path.join(__dirname, 'watch.html'));
+});
+
+// Serve home page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
+module.exports = app;
