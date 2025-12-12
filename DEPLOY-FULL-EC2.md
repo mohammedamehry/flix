@@ -14,7 +14,11 @@ This guide explains how to host **everything** (HTML/CSS/JS + Node.js Backend) o
     -   Go to AWS Console -> EC2 -> Launch Instance.
     -   Choose **Ubuntu Server 24.04 LTS**.
     -   Instance Type: **t2.micro** (Free tier eligible).
-    -   **Security Group**: Allow **SSH (22)** and **Custom TCP (3000)**.
+    -   **Security Group**: You must allow the following **Inbound Rules**:
+        -   **SSH** (Port 22) -> Source: Only My IP (Recommended)
+        -   **HTTP** (Port 80) -> Source: Anywhere (0.0.0.0/0)
+        -   **HTTPS** (Port 443) -> Source: Anywhere (0.0.0.0/0)
+        -   **Custom TCP** (Port 3000) -> Source: Anywhere (0.0.0.0/0)
 
 2.  **Connect to Instance**:
     ```bash
@@ -39,8 +43,8 @@ This guide explains how to host **everything** (HTML/CSS/JS + Node.js Backend) o
 
 2.  **Upload to EC2**:
     *Option A: Git Clone (Fastest)*
-    -   `git clone https://github.com/yourusername/your-repo.git`
-    -   `cd your-repo`
+    -   `git clone https://github.com/mohammedamehry/flix.git`
+    -   `cd flix`
     
     *Option B: SCP / FileZilla*
     -   Upload the entire project folder to `/home/ubuntu/anti_netflix`.
@@ -51,7 +55,7 @@ This guide explains how to host **everything** (HTML/CSS/JS + Node.js Backend) o
     npm install
     
     # Start with PM2 (Process Manager)
-    pm2 start server.js --name "myflix"
+    pm2 start server.js --name "flix"
     
     # Save to auto-start on reboot
     pm2 save
@@ -77,11 +81,22 @@ If you want a real domain (`myflix.com`) instead of an IP:
     sudo apt install nginx -y
     ```
 3.  **Configure Nginx proxy**:
-    Edit `/etc/nginx/sites-available/default`:
+    We need to tell Nginx to forward all traffic from port 80 (HTTP) to your Node.js app on port 3000.
+
+    a. **Open the config file**:
+    ```bash
+    sudo nano /etc/nginx/sites-available/default
+    ```
+
+    b. **Delete existing content**:
+    Use your arrow keys to scroll. You can hold `Ctrl + K` to cut/delete lines until the file is empty.
+
+    c. **Paste the new configuration**:
+    (Replace `myflix.com` with your actual domain, or use `_` if you don't have one yet)
     ```nginx
     server {
         listen 80;
-        server_name myflix.com www.myflix.com;
+        server_name flixmax.to www.flixmax.to;
 
         location / {
             proxy_pass http://localhost:3000;
@@ -93,9 +108,21 @@ If you want a real domain (`myflix.com`) instead of an IP:
         }
     }
     ```
-    Restart: `sudo systemctl restart nginx`
+
+    d. **Save and Exit**:
+    -   Press `Ctrl + O`, then `Enter` (to save).
+    -   Press `Ctrl + X` (to exit).
+
+    e. **Test and Reload**:
+    ```bash
+    # Check for syntax errors
+    sudo nginx -t
+    
+    # If it says "successful", reload Nginx
+    sudo systemctl reload nginx
+    ```
 4.  **SSL (HTTPS)**:
     ```bash
     sudo apt install certbot python3-certbot-nginx
-    sudo certbot --nginx -d myflix.com
+    sudo certbot --nginx -d flixmax.to
     ```
