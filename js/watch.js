@@ -1,6 +1,13 @@
 const urlParams = new URLSearchParams(window.location.search);
 const MOVIE_ID = urlParams.get('id');
 
+// Detect iOS devices
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+console.log('Device detection:', { isIOS, isSafari, userAgent: navigator.userAgent });
+
 // --- Mobile Debugger ---
 if (urlParams.get('debug') === 'true') {
     const debugOverlay = document.createElement('div');
@@ -232,6 +239,16 @@ async function initWatch() {
                 ],
                 tracks: tracks,
                 playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                controls: true,
+                mute: false,
+                playsinline: true,
+                aspectRatio: '16:9',
+                hlsConfig: {
+                    debug: false,
+                    enableWorker: true,
+                    lowLatencyMode: false,
+                    backBufferLength: 90
+                }
             });
 
             // Event Listeners
@@ -243,7 +260,13 @@ async function initWatch() {
             player.on('error', function (error) {
                 console.error("OvenPlayer Error:", error);
                 hideLoading();
-                showError("Video Error", "An error occurred during playback.");
+
+                // Provide specific error message for iOS
+                if (isIOS || isSafari) {
+                    showError("Video Error", "An error occurred during playback. If you're on iOS, try: 1) Enable 'Allow Cross-Website Tracking' in Settings > Safari > Privacy, 2) Check your internet connection, 3) Try a different network.");
+                } else {
+                    showError("Video Error", "An error occurred during playback. Please try refreshing the page.");
+                }
             });
 
             // Expose player globally

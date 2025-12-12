@@ -14,6 +14,15 @@ app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Handle OPTIONS preflight requests for CORS (important for iOS)
+app.options('*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.status(204).send();
+});
+
 // Proxy endpoint for HLS streams
 app.get('/proxy', async (req, res) => {
     const { url, referer, origin } = req.query;
@@ -80,6 +89,9 @@ app.get('/proxy', async (req, res) => {
 
             res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
             res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
             res.send(rewrittenLines.join('\n'));
 
             // Handle video segments - fix content-type
@@ -97,13 +109,22 @@ app.get('/proxy', async (req, res) => {
 
             res.setHeader('Content-Type', fixedContentType);
             res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
 
             // Forward other important headers
             if (response.headers.get('content-range')) {
                 res.setHeader('Content-Range', response.headers.get('content-range'));
             }
+            if (response.headers.get('content-length')) {
+                res.setHeader('Content-Length', response.headers.get('content-length'));
+            }
             if (response.headers.get('accept-ranges')) {
                 res.setHeader('Accept-Ranges', response.headers.get('accept-ranges'));
+            } else {
+                // iOS requires Accept-Ranges header
+                res.setHeader('Accept-Ranges', 'bytes');
             }
 
             // Stream the response
@@ -113,6 +134,9 @@ app.get('/proxy', async (req, res) => {
         } else {
             res.setHeader('Content-Type', contentType);
             res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+            res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
             response.body.pipe(res);
         }
 
