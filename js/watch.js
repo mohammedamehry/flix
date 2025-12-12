@@ -4,7 +4,7 @@ const MOVIE_ID = urlParams.get('id');
 // --- Mobile Debugger ---
 if (urlParams.get('debug') === 'true') {
     const debugOverlay = document.createElement('div');
-    debugOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:50%;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:10px;overflow-y:scroll;z-index:9999;pointer-events:none;padding:10px;white-space:pre-wrap;';
+    debugOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:50%;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:10px;overflow-y:scroll;z-index:2147483647;pointer-events:none;padding:10px;white-space:pre-wrap;';
     document.body.appendChild(debugOverlay);
 
     const oldLog = console.log;
@@ -265,6 +265,8 @@ async function initWatch() {
 // Helper to show the error overlay
 function showError(title, message) {
     const overlay = document.getElementById('error-overlay');
+    console.error(`[UI ERROR] ${title}: ${message}`); // Log to debug console
+
     if (!overlay) {
         console.error("Error overlay element not found!");
         alert(`${title}: ${message}`); // Fallback to alert
