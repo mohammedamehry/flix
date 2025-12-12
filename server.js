@@ -59,7 +59,8 @@ app.get('/proxy', async (req, res) => {
         }
 
         const contentType = response.headers.get('content-type') || '';
-        const isM3U8 = contentType.includes('mpegurl') || targetUrl.includes('.m3u8');
+        const forceM3U8 = req.query.type === 'm3u8';
+        const isM3U8 = forceM3U8 || contentType.includes('mpegurl') || targetUrl.includes('.m3u8');
         const isSegment = targetUrl.includes('/seg-') || /\.(ts|m4s|mp4|jpg|png|html|js|css|txt|webp)$/i.test(targetUrl);
 
         // Forward status code (Important for 206 Partial Content / Seeking)
@@ -167,7 +168,7 @@ app.get('/api/streams', async (req, res) => {
         if (data.streams) {
             data.streams = data.streams.map(stream => ({
                 ...stream,
-                file: `/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}`
+                file: `/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}&type=m3u8`
             }));
         }
 
