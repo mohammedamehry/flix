@@ -80,10 +80,17 @@ app.get('/proxy', async (req, res) => {
             res.send(rewrittenLines.join('\n'));
 
             // Handle video segments - fix content-type
+            // Handle video segments - fix content-type
         } else if (isSegment) {
-            // Anti-bot obfuscation fix: segments are disguised as images/html/js
-            const fixedContentType = 'video/mp2t'; // MPEG-TS
-            console.log(`[Proxy] Video segment: ${fixedContentType}`);
+            // Determine correct Content-Type
+            let fixedContentType = 'video/mp2t'; // Default to TS
+            if (targetUrl.includes('.m4s') || targetUrl.includes('.mp4')) {
+                fixedContentType = 'video/iso.segment';
+            } else if (targetUrl.includes('.aac') || targetUrl.includes('.mp3')) {
+                fixedContentType = 'audio/aac';
+            }
+
+            console.log(`[Proxy] Segment (${fixedContentType}): ${targetUrl.substring(targetUrl.length - 20)}`);
 
             res.setHeader('Content-Type', fixedContentType);
             res.setHeader('Access-Control-Allow-Origin', '*');
