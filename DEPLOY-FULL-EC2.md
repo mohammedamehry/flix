@@ -126,3 +126,26 @@ If you want a real domain (`myflix.com`) instead of an IP:
     sudo apt install certbot python3-certbot-nginx
     sudo certbot --nginx -d flixmax.to
     ```
+
+---
+
+## Maintenance & Restarting
+
+If you make changes to the code or if the server crashes, use these commands:
+
+1.  **Restart the App (Node.js)**:
+    ```bash
+    pm2 restart flix
+    ```
+
+2.  **Restart the Web Server (Nginx)**:
+    ```bash
+    sudo systemctl restart nginx
+    ```
+
+3.  **Deploy New Changes (from GitHub)**:
+    ```bash
+    cd flix
+    git pull
+    pm2 restart flix
+    ```
