@@ -8,8 +8,8 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
 console.log('Device detection:', { isIOS, isSafari, userAgent: navigator.userAgent });
 
-// --- Mobile Debugger (Enabled by default for testing) ---
-if (true) { // TODO: Revert to check urlParams.get('debug') === 'true' after fixing
+// --- Mobile Debugger ---
+if (urlParams.get('debug') === 'true') {
     const debugOverlay = document.createElement('div');
     debugOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:50%;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:10px;overflow-y:scroll;z-index:2147483647;pointer-events:none;padding:10px;white-space:pre-wrap;';
     document.body.appendChild(debugOverlay);
