@@ -253,6 +253,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Explicitly serve index.html and watch.html to match frontend links
+app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/watch.html', (req, res) => res.sendFile(path.join(__dirname, 'watch.html')));
+
 // Serve other pages
 app.get('/movies.html', (req, res) => res.sendFile(path.join(__dirname, 'movies.html')));
 app.get('/series.html', (req, res) => res.sendFile(path.join(__dirname, 'series.html')));
