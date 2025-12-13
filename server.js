@@ -7,7 +7,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all routes
+// Enable CORS for all routes
 app.use(cors());
+
+// Trust proxy (required for correct protocol detection behind Nginx/Cloudflare)
+app.set('trust proxy', true);
 
 // Serve static files (CSS, JS, images)
 app.use('/css', express.static(path.join(__dirname, 'css')));
