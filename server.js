@@ -216,7 +216,10 @@ app.get('/api/master.m3u8', async (req, res) => {
 
         data.streams.forEach(stream => {
             // Construct Proxy URL
-            const proxyUrl = `${req.protocol}://${req.get('host')}/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}&type=m3u8`;
+            // Force HTTPS unless we are on localhost
+            const host = req.get('host');
+            const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+            const proxyUrl = `${protocol}://${host}/proxy?url=${encodeURIComponent(stream.file)}&referer=${encodeURIComponent(data.headers.referer || 'https://api.videasy.net/')}&origin=${encodeURIComponent(data.headers.origin || 'https://api.videasy.net')}&type=m3u8`;
 
             // Bandwidth estimation
             const bandwidthMap = {
