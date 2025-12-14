@@ -38,8 +38,25 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/loading.css">
-    <!-- Icons (Phosphor or FontAwesome - using Phosphor for modern look if possible, or SVG directly. Let's use FontAwesome CDN for ease or just SVG icons inline/from a library) -->
-    <!-- Using boxicons for consistency and generic icons -->
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://flixmax.to/">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "FlixMax",
+      "url": "https://flixmax.to/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://flixmax.to/search.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Icons (Phosphor or FontAwesome) -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 
