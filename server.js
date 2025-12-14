@@ -35,13 +35,13 @@ app.get('/proxy', async (req, res) => {
         return res.status(400).json({ error: 'Missing url parameter' });
     }
 
-    const targetUrl = decodeURIComponent(url);
-    const customReferer = referer ? decodeURIComponent(referer) : 'https://api.videasy.net/';
-    const customOrigin = origin ? decodeURIComponent(origin) : 'https://api.videasy.net';
-
-    console.log(`[Proxy] Fetching: ${targetUrl.substring(0, 80)}...`);
-
     try {
+        const targetUrl = decodeURIComponent(url);
+        const customReferer = referer ? decodeURIComponent(referer) : 'https://api.videasy.net/';
+        const customOrigin = origin ? decodeURIComponent(origin) : 'https://api.videasy.net';
+
+        console.log(`[Proxy] Fetching: ${targetUrl.substring(0, 80)}...`);
+
         const headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Referer': customReferer,
@@ -58,7 +58,7 @@ app.get('/proxy', async (req, res) => {
         const response = await fetch(targetUrl, { headers });
 
         if (!response.ok) {
-            console.error(`[Proxy] Error: ${response.status} ${response.statusText}`);
+            console.error(`[Proxy] Upstream Error: ${response.status} ${response.statusText}`);
             return res.status(response.status).send(`Upstream error: ${response.statusText}`);
         }
 
@@ -73,7 +73,6 @@ app.get('/proxy', async (req, res) => {
         // Handle M3U8 manifest - rewrite URLs
         if (isM3U8) {
             const text = await response.text();
-            console.log(`[Proxy] M3U8 manifest: ${text.length} bytes`);
 
             const baseUrl = new URL(targetUrl);
             const lines = text.split('\n');
@@ -100,17 +99,14 @@ app.get('/proxy', async (req, res) => {
             res.send(rewrittenLines.join('\n'));
 
             // Handle video segments - fix content-type
-            // Handle video segments - fix content-type
         } else if (isSegment) {
             // Determine correct Content-Type
-            let fixedContentType = 'video/mp2t'; // Default to TS
+            let fixedContentType = 'video/mp2t'; // Default to TV
             if (targetUrl.includes('.m4s') || targetUrl.includes('.mp4')) {
                 fixedContentType = 'video/iso.segment';
             } else if (targetUrl.includes('.aac') || targetUrl.includes('.mp3')) {
                 fixedContentType = 'audio/aac';
             }
-
-            console.log(`[Proxy] Segment (${fixedContentType}): ${targetUrl.substring(targetUrl.length - 20)}`);
 
             res.setHeader('Content-Type', fixedContentType);
             res.setHeader('Access-Control-Allow-Origin', '*');
@@ -146,8 +142,13 @@ app.get('/proxy', async (req, res) => {
         }
 
     } catch (error) {
-        console.error(`[Proxy] Error:`, error.message);
-        res.status(500).json({ error: error.message });
+        console.error(`[Proxy] Error processing ${url}:`, error.message);
+        // Distinguish between client errors (URI malformed) and server/network errors
+        if (error instanceof URIError) {
+            return res.status(400).json({ error: 'Invalid URL parameter' });
+        }
+        // Network errors -> 502 Bad Gateway
+        return res.status(502).json({ error: `Upstream error: ${error.message}` });
     }
 });
 
