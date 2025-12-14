@@ -176,14 +176,13 @@ async function initWatch() {
             // Fetch subtitles separately for the player config (optional, but good for UI)
             // Note: We can fire this asynchronously without blocking playback, or fetch api/streams just for tracks if needed.
             // For now, let's keep it simple and just load the video. 
+            // If we need tracks, we might need to fetch api/streams PARALLEL to setting the source, 
+            // but to minimize delay, let's just set the source.
             // *To keep existing subtitle functionality, we still need to fetch /api/streams to get tracks list.*
 
             let tracks = [];
-            let streamError = false;
-
             try {
                 const res = await fetch(apiUrl);
-                if (!res.ok) throw new Error("Stream API Failed");
                 const data = await res.json();
                 if (data.tracks) {
                     data.tracks.forEach((t) => {
@@ -196,15 +195,7 @@ async function initWatch() {
                         });
                     });
                 }
-            } catch (e) {
-                console.warn("Could not load streams/subtitles", e);
-                // If API fails, we likely can't generate a master playlist either, 
-                // but let's try relying on the player error to trigger fallback, 
-                // OR trigger it right here if we are sure.
-                // Given the current issue is API down, triggering here is safer/faster.
-                fallbackToEmbed(details.id, type, urlParams.get('season') || 1, urlParams.get('episode') || 1);
-                return;
-            }
+            } catch (e) { console.warn("Could not load subtitles", e); }
 
 
             // --- INIT OVENPLAYER ---
@@ -243,8 +234,14 @@ async function initWatch() {
 
             player.on('error', function (error) {
                 console.error("OvenPlayer Error:", error);
-                // Fallback
-                fallbackToEmbed(details.id, type, urlParams.get('season') || 1, urlParams.get('episode') || 1);
+                hideLoading();
+
+                // Provide specific error message for iOS
+                if (isIOS || isSafari) {
+                    showError("Video Error", "An error occurred during playback. If you're on iOS, try: 1) Enable 'Allow Cross-Website Tracking' in Settings > Safari > Privacy, 2) Check your internet connection, 3) Try a different network.");
+                } else {
+                    showError("Video Error", "An error occurred during playback. Please try refreshing the page.");
+                }
             });
 
             // Expose player globally
