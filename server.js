@@ -269,16 +269,10 @@ async function getSources(movieInfo) {
                 url += `&episodeId=${movieInfo.episode}&seasonId=${movieInfo.season}`;
             }
 
-            console.log(`[getSources] Requesting: ${url}`);
             const response = await fetch(url, { headers });
             const textDetail = await response.text();
-            console.log(`[getSources] Response length: ${textDetail.length}`);
-            console.log(`[getSources] Raw upstream response: ${textDetail}`);
 
-            if (!textDetail) {
-                console.log(`[getSources] Empty response from ${source}`);
-                continue;
-            }
+            if (!textDetail) continue;
 
             // Decrypt Logic
             const urlDecrypt = "https://enc-dec.app/api/dec-videasy";
@@ -287,20 +281,14 @@ async function getSources(movieInfo) {
                 id: movieInfo.tmdbId
             };
 
-            console.log(`[getSources] Decrypting...`);
             const decResponse = await fetch(urlDecrypt, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             });
             const decryptData = await decResponse.json();
-            console.log(`[getSources] Decrypt result keys: ${Object.keys(decryptData || {})}`);
-            console.log(`[getSources] Decrypt response: ${JSON.stringify(decryptData)}`);
 
-            if (!decryptData || !decryptData.result || !decryptData.result.sources) {
-                console.log(`[getSources] Invalid decrypt data or no sources`);
-                continue;
-            }
+            if (!decryptData || !decryptData.result || !decryptData.result.sources) continue;
 
             // Process Sources
             let directQuality = [];

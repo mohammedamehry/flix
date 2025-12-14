@@ -258,37 +258,9 @@ async function initWatch() {
 
     } catch (error) {
         console.error("Error initializing player:", error);
-        // Fallback to Embed
-        fallbackToEmbed(MOVIE_ID, typeParam, urlParams.get('season'), urlParams.get('episode'));
+        hideLoading();
+        showError("Something Went Wrong", "Failed to load video information. Please try again.");
     }
-}
-
-function fallbackToEmbed(tmdbId, type, season, episode) {
-    console.log("Falling back to Embed Player...");
-    hideLoading();
-
-    const playerContainer = document.getElementById('player');
-    if (!playerContainer) return;
-
-    // Clear existing player if any
-    playerContainer.innerHTML = '';
-
-    const isTv = type === 'tv';
-    // Use vidsrc.xyz or vidsrc.to
-    let embedUrl = `https://vidsrc.xyz/embed/${isTv ? `tv/${tmdbId}/${season}/${episode}` : `movie/${tmdbId}`}`;
-
-    const iframe = document.createElement('iframe');
-    iframe.src = embedUrl;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.allow = 'autoplay; fullscreen';
-
-    playerContainer.innerHTML = '';
-    playerContainer.appendChild(iframe);
-
-    // Update header to indicate fallback (optional)
-    // showError("Source Unavailable", "Switched to fallback player.");
 }
 
 // Helper to show the error overlay
