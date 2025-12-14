@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
+    <title>FlixMax - Watch Movies & TV Series</title>
+
+    <!-- SEO & Social Media Tags -->
+    <meta name="keywords"
+        content="anime movies, anime series, watch anime, free anime, streaming anime, online anime, hd anime, flixmax, movies, tv shows, watch online, stream movies, stream series">
+    <meta name="description"
+        content="FlixMax - Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta name="author" content="FlixMax">
+
+    <!-- Open Graph (Facebook/Discord/etc) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://flixmax.to/">
+    <meta property="og:title" content="FlixMax - Watch Anime Movies & TV Series">
+    <meta property="og:description"
+        content="Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta property="og:image" content="https://flixmax.to/images/social_preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://flixmax.to/">
+    <meta property="twitter:title" content="FlixMax - Watch Anime Movies & TV Series">
+    <meta property="twitter:description"
+        content="Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta property="twitter:image" content="https://flixmax.to/images/social_preview.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anton&display=swap"
+        rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/loading.css">
+
+    <!-- Icons (Phosphor or FontAwesome) -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <img src="images/samplelogo.png" alt="Loading..." class="loading-logo">
+    </div>
+
+    <!-- Navbar -->
+    <header id="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img src="images/samplelogo.png" alt="FlixMax" class="brand-logo">
+            </a>
+        </div>
+        <nav class="nav-links">
+            <a href="#" class="active"><i class='bx bx-home-alt-2'></i> Home</a>
+            <a href="movies.html"><i class='bx bx-movie-play'></i> Movies</a>
+            <a href="series.html"><i class='bx bx-tv'></i> TV Series</a>
+
+        </nav>
+        <div class="nav-actions">
+            <div class="icon-link" id="search-trigger"><i class='bx bx-search'></i></div>
+            <div class="icon-link mobile-only" id="mobile-menu-btn"><i class='bx bx-menu'></i></div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="hero-slider-track" id="hero-slider-track">
+            <!-- Slides injected by JS -->
+        </div>
+        <!-- Overlays moved to CSS pseudo-elements on slides -->
+
+        <!-- Hero Navigation -->
+        <div class="hero-nav-actions">
+            <button id="hero-prev" class="hero-nav-btn"><i class='bx bx-chevron-left'></i></button>
+            <button id="hero-next" class="hero-nav-btn"><i class='bx bx-chevron-right'></i></button>
+        </div>
+        <div class="hero-dots" id="hero-dots"></div>
+    </section>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+        <!-- Top 10 Section -->
+        <section class="row-section" id="top-10-row">
+            <h2 class="section-title">
+                <span class="outline-red">TOP 10</span>
+                <span class="thin-text">CONTENT TODAY</span>
+            </h2>
+            <div class="slider-container">
+                <button class="handle left-handle"><i class='bx bx-chevron-left'></i></button>
+                <div class="slider" id="top-10-slider">
+                    <!-- Items -->
+                </div>
+                <button class="handle right-handle"><i class='bx bx-chevron-right'></i></button>
+            </div>
+        </section>
+
+        <!-- Series on Netflix Section -->
+        <section class="row-section" id="series-row">
+            <div class="provider-header-container">
+                <div class="provider-title">
+                    <span class="red-bar"></span>
+                    Series on <span class="red-text" style="margin-left: 8px;">Netflix</span>
+                </div>
+                <div class="provider-tabs">
+                    <button class="provider-tab active">Netflix</button>
+                    <button class="provider-tab">Prime</button>
+                    <button class="provider-tab">Max</button>
+                    <button class="provider-tab">Disney+</button>
+                    <button class="provider-tab">AppleTV</button>
+                    <button class="provider-tab">Paramount</button>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <button class="handle left-handle"><i class='bx bx-chevron-left'></i></button>
+                <div class="slider" id="series-slider">
+                    <!-- Items -->
+                </div>
+                <button class="handle right-handle"><i class='bx bx-chevron-right'></i></button>
+            </div>
+        </section>
+
+
+
+        <!-- Top Rated Section -->
+        <section class="row-section" id="top-rated-row">
+            <div class="provider-header-container">
+                <div class="provider-title">
+                    <span class="red-bar"></span>
+                    Top rated
+                </div>
+                <div class="provider-tabs" id="top-rated-tabs">
+                    <button class="provider-tab active" data-type="movie">Movies</button>
+                    <button class="provider-tab" data-type="tv">Series</button>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <button class="handle left-handle"><i class='bx bx-chevron-left'></i></button>
+                <div class="slider" id="top-rated-slider">
+                    <!-- Items -->
+                </div>
+                <button class="handle right-handle"><i class='bx bx-chevron-right'></i></button>
+            </div>
+        </section>
+
+        <!-- Genres Section -->
+        <section class="row-section" id="genres-row">
+            <div class="provider-header-container">
+                <div class="provider-title">
+                    <span class="red-bar"></span>
+                    Genres
+                </div>
+                <!-- Tabs: Comedy, Action, Horror, Romance, SciFi, Drama, Animation -->
+                <div class="provider-tabs" id="genre-tabs">
+                    <button class="provider-tab active" data-id="35">Comedy</button>
+                    <button class="provider-tab" data-id="28">Action</button>
+                    <button class="provider-tab" data-id="27">Horror</button>
+                    <button class="provider-tab" data-id="10749">Romance</button>
+                    <button class="provider-tab" data-id="878">SciFi</button>
+                    <button class="provider-tab" data-id="18">Drama</button>
+                    <button class="provider-tab" data-id="16">Animation</button>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <button class="handle left-handle"><i class='bx bx-chevron-left'></i></button>
+                <div class="slider" id="genres-slider">
+                    <!-- Items -->
+                </div>
+                <button class="handle right-handle"><i class='bx bx-chevron-right'></i></button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <a href="index.html">
+                    <img src="images/samplelogo.png" alt="Flex" class="footer-logo">
+                </a>
+                <p class="disclaimer">This site does not store any files on our server, we only linked to the media
+                    which is hosted on 3rd party services.</p>
+                <p class="contact-email">contact@flixmax.to</p>
+            </div>
+            <div class="footer-right">
+                <ul class="footer-links">
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="movies.html">Movies</a></li>
+                    <li><a href="series.html">TV Series</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 FlixMax. All rights reserved.</p>
+        </div>
+
+    </footer>
+
+    <!-- Mobile Menu Modal -->
+    <div id="mobile-menu-modal" class="mobile-menu-modal">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <h2>Menu</h2>
+                <i class='bx bx-x' id="close-menu-btn"></i>
+            </div>
+
+            <div class="menu-section">
+                <h3>CONTENT</h3>
+                <div class="menu-grid">
+                    <a href="index.html" class="menu-item">
+                        <div class="menu-icon icon-home"><i class='bx bx-home'></i></div>
+                        <span>Home</span>
+                    </a>
+                    <a href="movies.html" class="menu-item">
+                        <div class="menu-icon icon-movie"><i class='bx bx-movie-play'></i></div>
+                        <span>Movies</span>
+                    </a>
+                    <a href="series.html" class="menu-item">
+                        <div class="menu-icon icon-tv"><i class='bx bx-tv'></i></div>
+                        <span>TV Shows</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/favicon.png">
+    <title>Watching...</title>
+
+    <!-- SEO & Social Media Tags -->
+    <meta name="keywords"
+        content="anime movies, anime series, watch anime, free anime, streaming anime, online anime, hd anime, flixmax, movies, tv shows, watch online, stream movies, stream series">
+    <meta name="description"
+        content="FlixMax - Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta name="author" content="FlixMax">
+
+    <!-- Open Graph (Facebook/Discord/etc) -->
+    <meta property="og:type" content="video.movie">
+    <meta property="og:url" content="https://flixmax.to/">
+    <meta property="og:title" content="Watching on FlixMax">
+    <meta property="og:description"
+        content="Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta property="og:image" content="https://flixmax.to/images/social_preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://flixmax.to/">
+    <meta property="twitter:title" content="Watching on FlixMax">
+    <meta property="twitter:description"
+        content="Watch the latest Anime Movies and TV Series in HD for free. No ads, high quality streaming.">
+    <meta property="twitter:image" content="https://flixmax.to/images/social_preview.png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- OvenPlayer CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ovenplayer/dist/ovenplayer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="css/watch.css">
+    <link rel="stylesheet" href="css/loading.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-backdrop" id="loading-backdrop"></div>
+        <div class="loading-overlay"></div>
+        <div class="loading-content">
+            <h1 id="loading-title">Loading...</h1>
+            <div class="loading-bar-container">
+                <div class="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Overlay (Hidden by default) -->
+    <div id="error-overlay" class="hidden">
+        <div class="error-content">
+            <i class='bx bx-error-circle error-icon'></i>
+            <h2>No Stream Available</h2>
+            <p>We couldn't find a playback source for this title.</p>
+            <button class="error-btn" onclick="history.back()">
+                <i class='bx bx-arrow-back'></i> Go Back
+            </button>
+        </div>
+    </div>
+
+    <div class="video-container" id="video-container">
+        <!-- Netflix-style Header Overlay -->
+        <div class="player-header">
+            <button class="back-btn" onclick="history.back()">
+                <i class='bx bx-arrow-back'></i>
+            </button>
+            <div class="header-info">
+                <!-- Title will be injected here -->
+                <h1 id="header-title"></h1>
+            </div>
+            <!-- Share actions -->
+            <button id="share-btn" class="share-btn">
+                <i class='bx bx-share-alt'></i>
+            </button>
+        </div>
+
+        <div id="player"></div>
+
+        <!-- Share Modal -->
+        <div id="share-modal" class="share-modal hidden">
+            <div class="share-content">
+                <div class="share-header">
+                    <h2>Share this</h2>
+                    <i class='bx bx-x close-share'></i>
+                </div>
+                <div class="share-options">
+                    <button class="share-option" data-platform="facebook">
+                        <div class="share-icon fb"><i class='bx bxl-facebook'></i></div>
+                        <span>Facebook</span>
+                    </button>
+                    <button class="share-option" data-platform="twitter">
+                        <div class="share-icon twitter"><i class='bx bxl-twitter'></i></div>
+                        <span>Twitter</span>
+                    </button>
+                    <button class="share-option" data-platform="whatsapp">
+                        <div class="share-icon whatsapp"><i class='bx bxl-whatsapp'></i></div>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="share-option" data-platform="telegram">
+                        <div class="share-icon telegram"><i class='bx bxl-telegram'></i></div>
+                        <span>Telegram</span>
+                    </button>
+                    <!-- New Platforms -->
+                    <button class="share-option" data-platform="reddit">
+                        <div class="share-icon reddit"><i class='bx bxl-reddit'></i></div>
+                        <span>Reddit</span>
+                    </button>
+
+                    <button class="share-option" data-platform="copy">
+                        <div class="share-icon copy"><i class='bx bx-copy'></i></div>
+                        <span>Copy Link</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/config.js"></script>
+        <script src="js/api.js"></script>
+        <script src="js/watch.js"></script>
+</body>
