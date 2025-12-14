@@ -176,13 +176,14 @@ async function initWatch() {
             // Fetch subtitles separately for the player config (optional, but good for UI)
             // Note: We can fire this asynchronously without blocking playback, or fetch api/streams just for tracks if needed.
             // For now, let's keep it simple and just load the video. 
-            // If we need tracks, we might need to fetch api/streams PARALLEL to setting the source, 
-            // but to minimize delay, let's just set the source.
             // *To keep existing subtitle functionality, we still need to fetch /api/streams to get tracks list.*
 
             let tracks = [];
+            let streamError = false;
+
             try {
                 const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error("Stream API Failed");
                 const data = await res.json();
                 if (data.tracks) {
                     data.tracks.forEach((t) => {
@@ -195,7 +196,15 @@ async function initWatch() {
                         });
                     });
                 }
-            } catch (e) { console.warn("Could not load subtitles", e); }
+            } catch (e) {
+                console.warn("Could not load streams/subtitles", e);
+                // If API fails, we likely can't generate a master playlist either, 
+                // but let's try relying on the player error to trigger fallback, 
+                // OR trigger it right here if we are sure.
+                // Given the current issue is API down, triggering here is safer/faster.
+                fallbackToEmbed(details.id, type, urlParams.get('season') || 1, urlParams.get('episode') || 1);
+                return;
+            }
 
 
             // --- INIT OVENPLAYER ---
@@ -234,14 +243,8 @@ async function initWatch() {
 
             player.on('error', function (error) {
                 console.error("OvenPlayer Error:", error);
-                hideLoading();
-
-                // Provide specific error message for iOS
-                if (isIOS || isSafari) {
-                    showError("Video Error", "An error occurred during playback. If you're on iOS, try: 1) Enable 'Allow Cross-Website Tracking' in Settings > Safari > Privacy, 2) Check your internet connection, 3) Try a different network.");
-                } else {
-                    showError("Video Error", "An error occurred during playback. Please try refreshing the page.");
-                }
+                // Fallback
+                fallbackToEmbed(details.id, type, urlParams.get('season') || 1, urlParams.get('episode') || 1);
             });
 
             // Expose player globally
@@ -255,9 +258,37 @@ async function initWatch() {
 
     } catch (error) {
         console.error("Error initializing player:", error);
-        hideLoading();
-        showError("Something Went Wrong", "Failed to load video information. Please try again.");
+        // Fallback to Embed
+        fallbackToEmbed(MOVIE_ID, typeParam, urlParams.get('season'), urlParams.get('episode'));
     }
+}
+
+function fallbackToEmbed(tmdbId, type, season, episode) {
+    console.log("Falling back to Embed Player...");
+    hideLoading();
+
+    const playerContainer = document.getElementById('player');
+    if (!playerContainer) return;
+
+    // Clear existing player if any
+    playerContainer.innerHTML = '';
+
+    const isTv = type === 'tv';
+    // Use vidsrc.xyz or vidsrc.to
+    let embedUrl = `https://vidsrc.xyz/embed/${isTv ? `tv/${tmdbId}/${season}/${episode}` : `movie/${tmdbId}`}`;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = embedUrl;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.allow = 'autoplay; fullscreen';
+
+    playerContainer.innerHTML = '';
+    playerContainer.appendChild(iframe);
+
+    // Update header to indicate fallback (optional)
+    // showError("Source Unavailable", "Switched to fallback player.");
 }
 
 // Helper to show the error overlay

@@ -241,6 +241,10 @@ app.get('/api/master.m3u8', async (req, res) => {
 
     } catch (error) {
         console.error(`[Master] Error:`, error.message);
+        if (error.message === 'No streams found') {
+            // Return 404 so client knows it's missing, not broken server
+            return res.status(404).send('#EXTM3U\n#EXT-X-ERROR: No streams found');
+        }
         res.status(500).send('#EXTM3U\n#EXT-X-ERROR: Server Error');
     }
 });
