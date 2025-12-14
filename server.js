@@ -354,34 +354,6 @@ app.get('/movieinfo.html', (req, res) => res.sendFile(path.join(__dirname, 'movi
 app.get('/serieinfo.html', (req, res) => res.sendFile(path.join(__dirname, 'serieinfo.html')));
 app.get('/404.html', (req, res) => res.sendFile(path.join(__dirname, '404.html')));
 
-// Sitemap endpoint
-app.get('/sitemap.xml', (req, res) => {
-    const host = req.get('host');
-    const protocol = req.protocol; // express handles this well with 'trust proxy' already set
-    const baseUrl = `${protocol}://${host}`;
-
-    const pages = [
-        '',
-        '/movies.html',
-        '/series.html',
-        '/search.html'
-    ];
-
-    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    ${pages.map(page => `
-    <url>
-        <loc>${baseUrl}${page}</loc>
-        <changefreq>daily</changefreq>
-        <priority>${page === '' ? '1.0' : '0.8'}</priority>
-    </url>
-    `).join('')}
-</urlset>`;
-
-    res.header('Content-Type', 'application/xml');
-    res.send(sitemap);
-});
-
 // Fallback for 404
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, '404.html'));
