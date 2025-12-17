@@ -27,6 +27,35 @@ app.options('*', (req, res) => {
     res.status(204).send();
 });
 
+// Sitemap.xml
+app.get('/sitemap.xml', (req, res) => {
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://flixmax.to/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://flixmax.to/movies.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://flixmax.to/series.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://flixmax.to/search.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>`;
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemap);
+});
+
 // Proxy endpoint for HLS streams
 app.get('/proxy', async (req, res) => {
     const { url, referer, origin } = req.query;
@@ -262,8 +291,10 @@ async function getSources(movieInfo) {
                 url += `&episodeId=${movieInfo.episode}&seasonId=${movieInfo.season}`;
             }
 
+            console.log(`[Videasy] Fetching: ${url}`);
             const response = await fetch(url, { headers });
             const textDetail = await response.text();
+            console.log(`[Videasy] Response (${textDetail.length} bytes): ${textDetail.substring(0, 200)}...`);
 
             if (!textDetail) continue;
 

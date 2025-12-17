@@ -1,0 +1,10 @@
+Server running on port 3000
+[API] Fetching streams for: Shutter Island
+[Videasy] Fetching: https://api.videasy.net/myflixerzupcloud/sources-with-title?mediaType=movie&year=2010&tmdbId=11324&imdbId=tt1130884&title=Shutter%20Island
+[Videasy] Response (109 bytes): This content has been blocked for legal reasons
+
+DEPLOYMENT_DISABLED
+
+cdg1::g2fwl-1765718261120-390ad94a4269
+...
+[API] Error: No streams found
